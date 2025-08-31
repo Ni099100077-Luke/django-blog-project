@@ -1,0 +1,213 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }} - 我的博客{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-18 mx-auto">
+        <!-- 返回按钮 -->
+        <div class="mb-3">
+            <a href="{% url 'blog:post_list' %}" class="btn btn-outline-secondary">
+                ← 返回文章列表
+            </a>
+        </div>
+
+        <!-- 文章内容 -->
+        <article class="card">
+            <div class="card-body">
+                <h1 class="card-title mb-3">{{ post.title }}</h1>
+                
+                <!-- 文章元信息 -->
+                <div class="d-flex justify-content-between align-items-center mb-4 text-muted">
+                    <div>
+                        <span class="me-3">👤 {{ post.author.username }}</span>
+                        <span>📅 {{ post.created_at|date:"Y年m月d日 H:i" }}</span>
+                        {% if post.category %}
+                            <span class="me-3">📂 
+                                <a href="{% url 'blog:category_posts' post.category.slug %}" class="text-muted text-decoration-none">
+                                    {{ post.category.name }}
+                                </a>
+                            </span>
+                        {% endif %}
+                        {% if post.tags.exists %}
+                            <span>🏷️ 
+                                {% for tag in post.tags.all %}
+                                    <a href="{% url 'blog:tag_posts' tag.slug %}" class="badge bg-secondary text-decoration-none">
+                                        {{ tag.name }}
+                                    </a>
+                                {% endfor %}
+                            </span>
+                        {% endif %}
+                    </div>
+                    {% if post.updated_at != post.created_at %}
+                        <small>🔄 更新于 {{ post.updated_at|date:"Y年m月d日 H:i" }}</small>
+                    {% endif %}
+                </div>
+
+                <!-- 文章正文 -->
+                <div class="post-content">
+                    {{ post.content|linebreaks }}
+                </div>
+
+                <!-- 社交分享按钮 -->
+                <div class="mt-4 pt-3 border-top">
+                    <h6 class="mb-3">📤 分享这篇文章：</h6>
+                    <div class="d-flex gap-2">
+                        <a href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.build_absolute_uri|urlencode }}" 
+                           class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener">
+                            <i class="fab fa-twitter"></i> Twitter
+                        </a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}" 
+                           class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener">
+                            <i class="fab fa-facebook"></i> Facebook
+                        </a>
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" 
+                           class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener">
+                            <i class="fab fa-linkedin"></i> LinkedIn
+                        </a>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard()">
+                            <i class="fas fa-link"></i> 复制链接
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- 文章导航 -->
+        <div class="mt-4 d-flex justify-content-between">
+            <div>
+                {% if post.id > 1 %}
+                    <a href="{% url 'blog:post_detail' post.id|add:'-1' %}" class="btn btn-outline-primary">
+                        ← 上一篇
+                    </a>
+                {% endif %}
+            </div>
+            <div>
+                {% if is_last_post %}
+                    <span class="btn btn-outline-secondary disabled">
+                        当前已经是最后一篇
+                    </span>
+                {% else %}
+                    <a href="{% url 'blog:post_detail' post.id|add:'1' %}" class="btn btn-outline-primary">
+                        下一篇 →
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 评论区域 -->
+        <div class="mt-5">
+            <h3 class="mb-4">💬 评论 ({{ comments.count }})</h3>
+            
+            {% if comments %}
+                <div class="comments-list mb-4">
+                    {% for comment in comments %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-subtitle mb-1 text-primary">
+                                        👤 {{ comment.author.username }}
+                                    </h6>
+                                    <small class="text-muted">
+                                        📅 {{ comment.created_at|date:"Y年m月d日 H:i" }}
+                                    </small>
+                                </div>
+                                <p class="card-text">{{ comment.content|linebreaks }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <p class="mb-0">暂无评论，快来发表第一条评论吧！</p>
+                </div>
+            {% endif %}
+
+            <!-- 评论表单 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">发表评论</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.is_authenticated %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="comment" value="true">
+                            
+                            <div class="mb-3">
+                                {{ comment_form.content.label_tag }}
+                                {{ comment_form.content }}
+                                {% if comment_form.content.errors %}
+                                    <div class="text-danger">
+                                        {{ comment_form.content.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    最多可输入1000个字符
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> 发表评论
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <p class="mb-0">
+                                🔐 请先 <a href="{% url 'login' %}" class="alert-link">登录</a> 后再发表评论
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 消息提示 -->
+{% if messages %}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        {% for message in messages %}
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">系统提示</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<script>
+function copyToClipboard() {
+    const url = '{{ request.build_absolute_uri }}';
+    navigator.clipboard.writeText(url).then(() => {
+        // 显示成功提示
+        const toast = document.createElement('div');
+        toast.className = 'toast show position-fixed bottom-0 end-0 m-3';
+        toast.innerHTML = `
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto">成功</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                链接已复制到剪贴板！
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        // 3秒后自动移除提示
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }).catch(err => {
+        console.error('复制失败:', err);
+        alert('复制失败，请手动复制链接：' + url);
+    });
+}
+</script>
+
+{% endblock %}

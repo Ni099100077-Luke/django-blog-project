@@ -1,0 +1,26 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}错误 - 我的博客{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto text-center">
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">❌ 操作失败</h4>
+            <p>{{ message }}</p>
+            <hr>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'blog:post_list' %}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> 返回首页
+                </a>
+                <a href="{% url 'blog:draft_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-file-alt"></i> 查看草稿
+                </a>
+                <a href="/admin/" class="btn btn-outline-info">
+                    <i class="fas fa-cog"></i> 管理后台
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

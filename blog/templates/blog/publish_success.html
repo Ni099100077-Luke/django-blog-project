@@ -1,0 +1,26 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}发布成功 - 我的博客{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto text-center">
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading">✅ 发布成功！</h4>
+            <p>文章 <strong>{{ post.title }}</strong> 已成功发布。</p>
+            <hr>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'blog:post_detail' post.id %}" class="btn btn-success">
+                    <i class="fas fa-eye"></i> 查看文章
+                </a>
+                <a href="{% url 'blog:post_list' %}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> 返回列表
+                </a>
+                <a href="/admin/blog/post/{{ post.id }}/change/" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> 继续编辑
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}草稿列表 - 我的博客{% endblock %}
+
+{% block content %}
+<style>
+    .draft-item {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        background-color: #fff3cd;
+    }
+    .draft-item:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .admin-actions a {
+        margin-right: 10px;
+        text-decoration: none;
+    }
+</style>
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <h1 class="mb-4">✏️ 草稿列表</h1>
+        <p class="text-muted mb-4">仅管理员可见的草稿文章</p>
+    
+    {% for draft in drafts %}
+        <div class="draft-item">
+            <h2>
+                {{ draft.title }}
+                <span class="badge bg-warning text-dark">草稿</span>
+            </h2>
+            
+            <p>作者：{{ draft.author.username }}</p>
+            <p>创建时间：{{ draft.created_at|date:"Y-m-d H:i" }}</p>
+            <p>最后更新：{{ draft.updated_at|date:"Y-m-d H:i" }}</p>
+            
+            <p>{{ draft.content|truncatewords:30 }}</p>
+            
+            <div class="admin-actions">
+                <a href="{% url 'blog:publish_post' draft.id %}" class="btn btn-success btn-sm">
+                    <i class="fas fa-check"></i> 发布
+                </a>
+                <a href="/admin/blog/post/{{ draft.id }}/change/" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit"></i> 编辑
+                </a>
+                <a href="/admin/blog/post/{{ draft.id }}/delete/" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i> 删除
+                </a>
+            </div>
+        </div>
+    {% empty %}
+        <div class="text-center py-5">
+            <h3>📝 暂无草稿</h3>
+            <p class="text-muted">目前没有草稿文章。</p>
+            <a href="/admin/blog/post/add/" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 创建新文章
+            </a>
+        </div>
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}

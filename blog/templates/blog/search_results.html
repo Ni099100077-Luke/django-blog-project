@@ -1,0 +1,252 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}
+    {% if query %}
+        搜索结果: "{{ query }}" - 我的博客
+    {% else %}
+        搜索文章 - 我的博客
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <h1 class="mb-4">
+            {% if query %}
+                🔍 搜索结果: "{{ query }}"
+            {% else %}
+                🔍 搜索文章
+            {% endif %}
+        </h1>
+        
+        <!-- 搜索框 -->
+        <div class="mb-4">
+            <form method="get" action="{% url 'blog:search_posts' %}">
+                <div class="input-group">
+                    <input type="search" name="q" class="form-control" 
+                           placeholder="搜索文章标题或内容..." 
+                           value="{{ query }}" 
+                           id="searchInput"
+                           autocomplete="off">
+                    <button class="btn btn-primary" type="submit" id="searchBtn">搜索</button>
+                </div>
+                <div id="searchHint" class="form-text text-muted mt-2" style="display: none;">
+                    💡 提示：输入关键词后按回车键或点击搜索按钮
+                </div>
+            </form>
+        </div>
+        
+        <!-- 搜索结果 -->
+        {% if query %}
+            {% if posts %}
+                <div class="alert alert-info">
+                    找到 <strong>{{ results_count }}</strong> 篇相关文章
+                </div>
+                
+                {% for post in posts %}
+                    <div class="post-item mb-3">
+                        <h2>
+                            <a href="{% url 'blog:post_detail' post.id %}">{{ post.title }}</a>
+                        </h2>
+                        
+                        <div class="text-muted mb-2">
+                            <span class="me-3">👤 {{ post.author.username }}</span>
+                            <span>📅 {{ post.created_at|date:"Y年m月d日 H:i" }}</span>
+                        </div>
+                        
+                        <!-- 高亮搜索关键词 -->
+                        <div class="post-excerpt">
+                            {% if query in post.title %}
+                                <p class="text-success mb-2">
+                                    <i class="fas fa-star"></i> <strong>标题匹配</strong>
+                                </p>
+                            {% elif query in post.content %}
+                                <p class="text-info mb-2">
+                                    <i class="fas fa-search"></i> <strong>内容匹配</strong>
+                                </p>
+                            {% endif %}
+                            <p>{{ post.content|truncatewords:50 }}</p>
+                        </div>
+                        
+                        <a href="{% url 'blog:post_detail' post.id %}" class="btn btn-outline-primary btn-sm">
+                            阅读全文 →
+                        </a>
+                    </div>
+                {% endfor %}
+                
+                <!-- 分页控件 -->
+                {% if posts.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if posts.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?q={{ query }}&page={{ posts.previous_page_number }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for i in posts.paginator.page_range %}
+                            {% if posts.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?q={{ query }}&page={{ i }}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if posts.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?q={{ query }}&page={{ posts.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="alert alert-warning mb-4">
+                    <h4>😔 没有找到相关文章</h4>
+                    <p>没有找到包含 "<strong>{{ query }}</strong>" 的文章。</p>
+                    <p>建议：</p>
+                    <ul>
+                        <li>检查拼写是否正确</li>
+                        <li>尝试使用更简单的关键词</li>
+                        <li>尝试使用同义词</li>
+                    </ul>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info">
+                <h4>🔍 欢迎使用文章搜索</h4>
+                <p>在上方搜索框中输入关键词来搜索文章。</p>
+                
+                <hr class="my-3">
+                
+                <h6>💡 搜索小贴士：</h6>
+                <ul class="mb-3">
+                    <li>可以搜索文章标题或内容</li>
+                    <li>支持中文和英文关键词</li>
+                    <li>尝试使用简短的关键词获得更好效果</li>
+                </ul>
+                
+                <h6>🔥 热门搜索：</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'blog:search_posts' %}?q=Django" class="btn btn-outline-primary btn-sm">Django</a>
+                    <a href="{% url 'blog:search_posts' %}?q=Python" class="btn btn-outline-primary btn-sm">Python</a>
+                    <a href="{% url 'blog:search_posts' %}?q=Web开发" class="btn btn-outline-primary btn-sm">Web开发</a>
+                    <a href="{% url 'blog:search_posts' %}?q=教程" class="btn btn-outline-primary btn-sm">教程</a>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- 返回按钮 -->
+        <div class="mt-4">
+            <a href="{% url 'blog:post_list' %}" class="btn btn-outline-secondary">
+                ← 返回文章列表
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .post-item {
+        padding: 1.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background-color: #fff;
+        transition: box-shadow 0.2s;
+    }
+    
+    .post-item:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .post-excerpt {
+        color: #666;
+        line-height: 1.6;
+    }
+    
+    .search-hint-show {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchHint = document.getElementById('searchHint');
+    const searchBtn = document.getElementById('searchBtn');
+    
+    // 搜索框获得焦点时显示提示
+    searchInput.addEventListener('focus', function() {
+        if (!this.value.trim()) {
+            searchHint.style.display = 'block';
+            searchHint.classList.add('search-hint-show');
+        }
+    });
+    
+    // 搜索框失去焦点时隐藏提示
+    searchInput.addEventListener('blur', function() {
+        setTimeout(() => {
+            searchHint.style.display = 'none';
+            searchHint.classList.remove('search-hint-show');
+        }, 200);
+    });
+    
+    // 输入内容时隐藏提示
+    searchInput.addEventListener('input', function() {
+        if (this.value.trim()) {
+            searchHint.style.display = 'none';
+        } else {
+            searchHint.style.display = 'block';
+        }
+    });
+    
+    // 表单提交验证
+    searchInput.closest('form').addEventListener('submit', function(e) {
+        const query = searchInput.value.trim();
+        if (!query) {
+            // 如果没有输入内容，给出友好提示
+            searchInput.focus();
+            searchHint.innerHTML = '⚠️ 请输入搜索关键词';
+            searchHint.style.display = 'block';
+            searchHint.style.color = '#dc3545';
+            
+            // 3秒后恢复正常提示
+            setTimeout(() => {
+                searchHint.innerHTML = '💡 提示：输入关键词后按回车键或点击搜索按钮';
+                searchHint.style.color = '#6c757d';
+            }, 3000);
+            
+            return; // 不阻止提交，让Django处理
+        }
+    });
+    
+    // 回车键搜索
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            this.closest('form').submit();
+        }
+    });
+});
+</script>
+{% endblock %}

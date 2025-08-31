@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活动日志 - 博客系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .log-item {
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+        .log-item.create { border-left-color: #28a745; }
+        .log-item.update { border-left-color: #ffc107; }
+        .log-item.delete { border-left-color: #dc3545; }
+        
+        .log-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+        
+        .log-time {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        .log-user {
+            font-weight: bold;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <!-- 主内容区域 -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-history"></i> 系统活动日志</h2>
+                        <p class="text-muted mb-0">实时显示博客系统中的所有操作记录</p>
+                    </div>
+                    <div class="card-body">
+                        {% if logs %}
+                            {% for log in logs %}
+                                <div class="log-item {{ log.action|slice:":6" }}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <span class="log-icon">
+                                                {% if log.action == 'create_post' %}📝
+                                                {% elif log.action == 'update_post' %}✏️
+                                                {% elif log.action == 'delete_post' %}🗑️
+                                                {% elif log.action == 'create_user' %}👤
+                                                {% else %}📋
+                                                {% endif %}
+                                            </span>
+                                            <strong>{{ log.get_action_display }}</strong>
+                                            <div class="mt-1">
+                                                <span class="log-description">{{ log.description }}</span>
+                                            </div>
+                                            {% if log.user %}
+                                                <small class="log-user">
+                                                    操作者: {{ log.user.username }}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="log-time">
+                                                {{ log.created_at|date:"Y-m-d H:i:s" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">暂无活动记录</h5>
+                                <p class="text-muted">当有用户操作时，记录会显示在这里</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 侧边栏 -->
+            <div class="col-lg-4">
+                <!-- 统计信息 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>📊 统计信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h4 class="text-primary">{{ logs|length }}</h4>
+                                <small class="text-muted">总记录数</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-success">{{ categories|length }}</h4>
+                                <small class="text-muted">分类数量</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 快捷操作 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🚀 快捷操作</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="/" class="btn btn-outline-primary btn-sm mb-2 w-100">
+                            🏠 返回首页
+                        </a>
+                        <a href="/admin/" class="btn btn-outline-secondary btn-sm mb-2 w-100">
+                            ⚙️ 管理后台
+                        </a>
+                        <button class="btn btn-outline-info btn-sm w-100" onclick="location.reload()">
+                            🔄 刷新日志
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 自动刷新页面（每30秒）
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>
